@@ -1,0 +1,42 @@
+[project]
+name = "paillier"
+version = "0.1.0"
+description = "Minimal pure-Python implementation of the Paillier cryptosystem."
+license = {text = "MIT"}
+authors = [
+    {name = "Andrei Lapets"},
+    {email = "a@lapets.io"}
+]
+readme = "README.rst"
+requires-python = ">=3.7"
+dependencies = [
+    "egcd~=1.0"
+]
+
+[project.urls]
+Repository = "https://github.com/lapets/paillier"
+
+[project.optional-dependencies]
+test = [
+    "pytest~=7.4",
+    "pytest-cov~=4.0"
+]
+lint = [
+    "pylint~=2.17"
+]
+coveralls = [
+    "coveralls~=3.3.1"
+]
+publish = [
+    "build~=0.10",
+    "twine~=4.0"
+]
+
+[build-system]
+requires = [
+    "setuptools>=68.0"
+]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules --cov=paillier --cov-report term-missing"
