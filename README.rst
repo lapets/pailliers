@@ -4,7 +4,7 @@ paillier
 
 Minimal pure-Python implementation of the `Paillier cryptosystem <https://en.wikipedia.org/wiki/Paillier_cryptosystem>`__.
 
-|pypi| |readthedocs|
+|pypi| |readthedocs| |actions| |coveralls|
 
 .. |pypi| image:: https://badge.fury.io/py/paillier.svg#
    :target: https://badge.fury.io/py/paillier
@@ -13,6 +13,14 @@ Minimal pure-Python implementation of the `Paillier cryptosystem <https://en.wik
 .. |readthedocs| image:: https://readthedocs.org/projects/paillier/badge/?version=latest
    :target: https://paillier.readthedocs.io/en/latest/?badge=latest
    :alt: Read the Docs documentation status.
+
+.. |actions| image:: https://github.com/lapets/paillier/workflows/lint-test-cover-docs/badge.svg#
+   :target: https://github.com/lapets/paillier/actions/workflows/lint-test-cover-docs.yml
+   :alt: GitHub Actions status.
+
+.. |coveralls| image:: https://coveralls.io/repos/github/lapets/paillier/badge.svg?branch=main
+   :target: https://coveralls.io/github/lapets/paillier?branch=main
+   :alt: Coveralls test coverage summary.
 
 Installation and Usage
 ----------------------
