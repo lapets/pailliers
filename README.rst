@@ -42,7 +42,7 @@ All installation and development dependencies are fully specified in ``pyproject
 
 .. code-block:: bash
 
-    python -m pip install .[docs,lint]
+    python -m pip install ".[docs,lint]"
 
 Documentation
 ^^^^^^^^^^^^^
@@ -50,7 +50,7 @@ The documentation can be generated automatically from the source files using `Sp
 
 .. code-block:: bash
 
-    python -m pip install .[docs]
+    python -m pip install ".[docs]"
     cd docs
     sphinx-apidoc -f -E --templatedir=_templates -o _source .. && make html
 
@@ -60,7 +60,7 @@ All unit tests are executed and their coverage is measured when using `pytest <h
 
 .. code-block:: bash
 
-    python -m pip install .[test]
+    python -m pip install ".[test]"
     python -m pytest
 
 Alternatively, all unit tests are included in the module itself and can be executed using `doctest <https://docs.python.org/3/library/doctest.html>`__:
@@ -73,7 +73,7 @@ Style conventions are enforced using `Pylint <https://pylint.readthedocs.io>`__:
 
 .. code-block:: bash
 
-    python -m pip install .[lint]
+    python -m pip install ".[lint]"
     python -m pylint src/paillier
 
 Contributions
@@ -90,9 +90,9 @@ This library can be published as a `package on PyPI <https://pypi.org/project/pa
 
 .. code-block:: bash
 
-    python -m pip install .[publish]
+    python -m pip install ".[publish]"
 
-Ensure that the correct version number appears in ``pyproject.toml``, and that any links in this README document to the Read the Docs documentation of this package (or its dependencies) have appropriate version numbers. Also ensure that the Read the Docs project for this library has an `automation rule <https://docs.readthedocs.io/en/stable/automation-rules.html>`__ that activates and sets as the default all tagged versions. Create and push a tag for this version (replacing ``?.?.?`` with the version number):
+Ensure that the correct version number appears in ``pyproject.toml``, and that any links in this README document to the Read the Docs documentation of this package (or its dependencies) have appropriate version numbers. Also ensure that the Read the Docs project for this library has an `automation rule <https://docs.readthedocs.io/en/stable/automation-rules.html>`__ that activates and sets as the default all tagged versions. Create and push a tag for the version being published (replacing ``?.?.?`` with the version number):
 
 .. code-block:: bash
 
