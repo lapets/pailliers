@@ -10,7 +10,8 @@ authors = [
 readme = "README.rst"
 requires-python = ">=3.7"
 dependencies = [
-    "egcd~=1.0"
+    "egcd~=2.0",
+    "rabinmiller~=0.1"
 ]
 
 [project.urls]

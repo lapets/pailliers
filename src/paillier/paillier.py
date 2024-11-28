@@ -8,68 +8,7 @@ import doctest
 import math
 import secrets
 from egcd import egcd
-
-def _prime(number: int) -> bool:
-    """
-    Pure-Python implementation of the Miller-Rabin primality test.
-
-    >>> _prime(2)
-    True
-    >>> _prime(4)
-    False
-    >>> _prime(9999777777776655544433333333222111111111)
-    True
-    >>> _prime(9999777777776655544433333333222111111115)
-    False
-    >>> _prime(0) or _prime(1)
-    False
-
-    Any attempt to invoke this function with an argument that does not have the
-    expected types raises an exception.
-
-    >>> _prime('abc')
-    Traceback (most recent call last):
-      ...
-    TypeError: input must be an integer
-    >>> _prime(-123)
-    Traceback (most recent call last):
-      ...
-    ValueError: input must be a nonnegative integer
-    """
-    if not isinstance(number, int):
-        raise TypeError('input must be an integer')
-
-    if number < 0:
-        raise ValueError('input must be a nonnegative integer')
-
-    if number in (0, 1):
-        return False
-
-    for prime in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
-        if number == prime:
-            return True
-        if number % prime == 0:
-            return False
-
-    exponent = 0
-    odd = number - 1
-    while odd % 2 == 0:
-        odd >>= 1
-        exponent += 1
-
-    for i in range(8):
-        a = 2 + secrets.randbelow(number - 2)
-        if pow(a, odd, number) == 1:
-            continue
-        composite = True
-        for i in range(exponent):
-            if pow(a, (2 ** i) * odd, number) == number - 1:
-                composite = False
-                break
-        if composite:
-            return False
-
-    return True
+from rabinmiller import rabinmiller
 
 def _primes(bit_length: int) -> Tuple[int, int]:
     """
@@ -85,9 +24,9 @@ def _primes(bit_length: int) -> Tuple[int, int]:
     (lower, upper) = (2 ** (bit_length - 1), (2 ** bit_length) - 1)
     difference = upper - lower
     (p, q) = (0, 0)
-    while p <= lower or not _prime(p):
+    while p <= lower or not rabinmiller(p):
         p = (secrets.randbelow(difference // 2) * 2) + lower + 1
-    while p == q or q <= lower or not _prime(q):
+    while p == q or q <= lower or not rabinmiller(q):
         q = (secrets.randbelow(difference // 2) * 2) + lower + 1
 
     return (p, q)
