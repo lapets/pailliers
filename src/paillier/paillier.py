@@ -47,9 +47,9 @@ def _generator(modulus: int) -> int:
 
     return g
 
-class secret(Tuple[int, int]):
+class secret(Tuple[int, int, int, int]):
     """
-    Wrapper class for a pair of integers that represents a secret key.
+    Wrapper class for a tuple of four integers that represents a secret key.
 
     >>> (secret_key, _) = keypair(256)
     >>> isinstance(secret_key, secret)
@@ -61,19 +61,19 @@ class secret(Tuple[int, int]):
     Traceback (most recent call last):
       ...
     TypeError: secret key must be a tuple of integers
-    >>> secret((-123, -456))
+    >>> secret((-12, -34, -56, 0))
     Traceback (most recent call last):
       ...
-    ValueError: secret key must be a tuple of two positive integers
+    ValueError: secret key must be a tuple of four positive integers
     """
-    def __init__(self: secret, components: Tuple[int, int]):
+    def __init__(self: secret, components: Tuple[int, int, int, int]):
         super().__init__()
 
         if not all(isinstance(b, int) for b in self):
             raise TypeError('secret key must be a tuple of integers')
 
-        if not len(components) == 2 or components[0] <= 0 or components[1] <= 0:
-            raise ValueError('secret key must be a tuple of two positive integers')
+        if not len(components) == 4 or any(c <= 0 for c in components):
+            raise ValueError('secret key must be a tuple of four positive integers')
 
 class public(Tuple[int, int]):
     """
@@ -143,7 +143,8 @@ def keypair(bit_length: int) -> (secret, public):
         (d, mu, _) = egcd((pow(g, lam, n ** 2) - 1) // n, n)
         if d != 1: # pragma: no cover # Highly unlikely to occur.
             g = None
-    return (secret((lam, mu % n)), public((n, g)))
+
+    return (secret((lam, mu % n, n, g)), public((n, g)))
 
 def encrypt(public_key: public, plaintext: Union[plain, int]) -> cipher:
     """
@@ -169,37 +170,34 @@ def encrypt(public_key: public, plaintext: Union[plain, int]) -> cipher:
     r = _generator(n)
     return cipher(pow(g, plaintext % n, n ** 2) * pow(r, n, n ** 2))
 
-def decrypt(secret_key: secret, public_key: public, ciphertext: cipher) -> plain:
+def decrypt(secret_key: secret, ciphertext: cipher) -> plain:
     """
     Decrypt the supplied plaintext using the supplied secret and public keys.
 
     >>> (secret_key, public_key) = keypair(2048)
     >>> c = encrypt(public_key, 123)
-    >>> decrypt(secret_key, public_key, c)
+    >>> decrypt(secret_key, c)
     123
 
     Any attempt to invoke this function using arguments that do not have
     the expected types raises an exception.
 
-    >>> decrypt(public_key, secret_key, c)
+    >>> decrypt(public_key, c)
     Traceback (most recent call last):
       ...
-    TypeError: can only decrypt using a secret key and its corresponding public key
-    >>> decrypt(secret_key, public_key, 123)
+    TypeError: can only decrypt using a secret key
+    >>> decrypt(secret_key, 123)
     Traceback (most recent call last):
       ...
     TypeError: can only decrypt a ciphertext
     """
-    if (not isinstance(secret_key, secret)) or (not isinstance(public_key, public)):
-        raise TypeError(
-            'can only decrypt using a secret key and its corresponding public key'
-        )
+    if not isinstance(secret_key, secret):
+        raise TypeError('can only decrypt using a secret key')
 
     if not isinstance(ciphertext, cipher):
         raise TypeError('can only decrypt a ciphertext')
 
-    (n, _) = public_key
-    (lam, mu) = secret_key
+    (lam, mu, n, _) = secret_key
     return plain((((pow(ciphertext, lam, n ** 2) - 1) // n) * mu) % n)
 
 def add(public_key: public, *ciphertexts: cipher) -> cipher:
@@ -211,7 +209,7 @@ def add(public_key: public, *ciphertexts: cipher) -> cipher:
     >>> c = encrypt(public_key, 22)
     >>> d = encrypt(public_key, 33)
     >>> r = add(public_key, c, d)
-    >>> int(decrypt(secret_key, public_key, r))
+    >>> int(decrypt(secret_key, r))
     55
 
     This function supports one or more ciphertexts. If only one ciphertext
@@ -221,10 +219,10 @@ def add(public_key: public, *ciphertexts: cipher) -> cipher:
     >>> y = encrypt(public_key, 5)
     >>> z = encrypt(public_key, 6)
     >>> r = add(public_key, x, y, z)
-    >>> int(decrypt(secret_key, public_key, r))
+    >>> int(decrypt(secret_key, r))
     15
     >>> r = add(public_key, x)
-    >>> int(decrypt(secret_key, public_key, r))
+    >>> int(decrypt(secret_key, r))
     4
 
     Iterables of ciphertexts can be provided with the help of unpacking via
@@ -232,7 +230,7 @@ def add(public_key: public, *ciphertexts: cipher) -> cipher:
     the way that the built-in :obj:`sum` function can be used).
 
     >>> r = add(public_key, *(c for c in [x, y, z]))
-    >>> int(decrypt(secret_key, public_key, r))
+    >>> int(decrypt(secret_key, r))
     15
 
     Any attempt to invoke this function using arguments that do not have
@@ -275,7 +273,7 @@ def mul(public_key: public, ciphertext: cipher, scalar: int) -> cipher:
     >>> (secret_key, public_key) = keypair(2048)
     >>> c = encrypt(public_key, 22)
     >>> r = mul(public_key, c, 3)
-    >>> int(decrypt(secret_key, public_key, r))
+    >>> int(decrypt(secret_key, r))
     66
 
     Any attempt to invoke this function using arguments that do not have
