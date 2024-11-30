@@ -18,9 +18,9 @@ jobs:
       - name: Lint and test module.
         run: |
           pip install -U .[lint,test]
-          python -m pylint paillier # Check against linting rules.
+          python -m pylint pailliers # Check against linting rules.
           python -m pytest # Run tests.
-          python src/paillier/paillier.py -v # Run tests via execution.
+          python src/pailliers/pailliers.py -v # Run tests via execution.
       - name: Publish coverage results.
         run: |
           pip install -U .[coveralls]

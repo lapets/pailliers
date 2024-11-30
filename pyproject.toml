@@ -1,7 +1,10 @@
 [project]
-name = "paillier"
+name = "pailliers"
 version = "0.1.0"
-description = "Minimal pure-Python implementation of the Paillier cryptosystem."
+description = """\
+    Minimal pure-Python implementation of Paillier's additively \
+    homomorphic cryptosystem.
+    """
 license = {text = "MIT"}
 authors = [
     {name = "Andrei Lapets"},
@@ -15,8 +18,8 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "https://github.com/lapets/paillier"
-Documentation = "https://paillier.readthedocs.io"
+Repository = "https://github.com/lapets/pailliers"
+Documentation = "https://pailliers.readthedocs.io"
 
 [project.optional-dependencies]
 docs = [
@@ -49,4 +52,4 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
-addopts = "--doctest-modules --ignore=docs --cov=paillier --cov-report term-missing"
+addopts = "--doctest-modules --ignore=docs --cov=pailliers --cov-report term-missing"

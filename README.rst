@@ -1,40 +1,40 @@
-========
-paillier
-========
+=========
+pailliers
+=========
 
-Minimal pure-Python implementation of the `Paillier cryptosystem <https://en.wikipedia.org/wiki/Paillier_cryptosystem>`__.
+Minimal pure-Python implementation of `Paillier's additively homomorphic cryptosystem<https://en.wikipedia.org/wiki/Paillier_cryptosystem>`__.
 
 |pypi| |readthedocs| |actions| |coveralls|
 
-.. |pypi| image:: https://badge.fury.io/py/paillier.svg#
-   :target: https://badge.fury.io/py/paillier
+.. |pypi| image:: https://badge.fury.io/py/pailliers.svg#
+   :target: https://badge.fury.io/py/pailliers
    :alt: PyPI version and link.
 
-.. |readthedocs| image:: https://readthedocs.org/projects/paillier/badge/?version=latest
-   :target: https://paillier.readthedocs.io/en/latest/?badge=latest
+.. |readthedocs| image:: https://readthedocs.org/projects/pailliers/badge/?version=latest
+   :target: https://pailliers.readthedocs.io/en/latest/?badge=latest
    :alt: Read the Docs documentation status.
 
-.. |actions| image:: https://github.com/lapets/paillier/workflows/lint-test-cover-docs/badge.svg#
-   :target: https://github.com/lapets/paillier/actions/workflows/lint-test-cover-docs.yml
+.. |actions| image:: https://github.com/lapets/pailliers/workflows/lint-test-cover-docs/badge.svg#
+   :target: https://github.com/lapets/pailliers/actions/workflows/lint-test-cover-docs.yml
    :alt: GitHub Actions status.
 
-.. |coveralls| image:: https://coveralls.io/repos/github/lapets/paillier/badge.svg?branch=main
-   :target: https://coveralls.io/github/lapets/paillier?branch=main
+.. |coveralls| image:: https://coveralls.io/repos/github/lapets/pailliers/badge.svg?branch=main
+   :target: https://coveralls.io/github/lapets/pailliers?branch=main
    :alt: Coveralls test coverage summary.
 
 Installation and Usage
 ----------------------
-This library is available as a `package on PyPI <https://pypi.org/project/paillier>`__:
+This library is available as a `package on PyPI <https://pypi.org/project/pailliers>`__:
 
 .. code-block:: bash
 
-    python -m pip install paillier
+    python -m pip install pailliers
 
 The library can be imported in the usual way:
 
 .. code-block:: python
 
-    from paillier import *
+    from pailliers import *
 
 Development
 -----------
@@ -67,18 +67,18 @@ Alternatively, all unit tests are included in the module itself and can be execu
 
 .. code-block:: bash
 
-    python src/paillier/paillier.py -v
+    python src/pailliers/pailliers.py -v
 
 Style conventions are enforced using `Pylint <https://pylint.readthedocs.io>`__:
 
 .. code-block:: bash
 
     python -m pip install ".[lint]"
-    python -m pylint src/paillier
+    python -m pylint src/pailliers
 
 Contributions
 ^^^^^^^^^^^^^
-In order to contribute to the source code, open an issue or submit a pull request on the `GitHub page <https://github.com/lapets/paillier>`__ for this library.
+In order to contribute to the source code, open an issue or submit a pull request on the `GitHub page <https://github.com/lapets/pailliers>`__ for this library.
 
 Versioning
 ^^^^^^^^^^
@@ -86,7 +86,7 @@ The version number format for this library and the changes to the library associ
 
 Publishing
 ^^^^^^^^^^
-This library can be published as a `package on PyPI <https://pypi.org/project/paillier>`__ via the GitHub Actions workflow found in ``.github/workflows/build-publish-sign-release.yml`` that follows the `recommendations found in the Python Packaging User Guide <https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/>`__.
+This library can be published as a `package on PyPI <https://pypi.org/project/pailliers>`__ via the GitHub Actions workflow found in ``.github/workflows/build-publish-sign-release.yml`` that follows the `recommendations found in the Python Packaging User Guide <https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/>`__.
 
 Ensure that the correct version number appears in ``pyproject.toml``, and that any links in this README document to the Read the Docs documentation of this package (or its dependencies) have appropriate version numbers. Also ensure that the Read the Docs project for this library has an `automation rule <https://docs.readthedocs.io/en/stable/automation-rules.html>`__ that activates and sets as the default all tagged versions.
 
