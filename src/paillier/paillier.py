@@ -31,23 +31,77 @@ def _primes(bit_length: int) -> Tuple[int, int]:
 
     return (p, q)
 
+def _generator(modulus: int) -> int:
+    """
+    Return a generator modulo the supplied modulus.
+
+    >>> g = _generator(17)
+    >>> math.gcd(g, 17)
+    1
+    >>> {(g * i) % 17 for i in range(17)} == set(range(17))
+    True
+    """
+    g = 0
+    while g == 0 or math.gcd(g, modulus) != 1:
+        g = secrets.randbelow(modulus)
+
+    return g
+
 class secret(Tuple[int, int]):
     """
-    Wrapper class for an integer that represents a secret key.
+    Wrapper class for a pair of integers that represents a secret key.
 
     >>> (secret_key, _) = keypair(256)
     >>> isinstance(secret_key, secret)
     True
+
+    An attempt to create an invalid key raises an exception.
+
+    >>> secret('abc')
+    Traceback (most recent call last):
+      ...
+    TypeError: secret key must be a tuple of integers
+    >>> secret((-123, -456))
+    Traceback (most recent call last):
+      ...
+    ValueError: secret key must be a tuple of two positive integers
     """
+    def __init__(self: secret, components: Tuple[int, int]):
+        super().__init__()
+
+        if not all(isinstance(b, int) for b in self):
+            raise TypeError('secret key must be a tuple of integers')
+
+        if not len(components) == 2 or components[0] <= 0 or components[1] <= 0:
+            raise ValueError('secret key must be a tuple of two positive integers')
 
 class public(Tuple[int, int]):
     """
-    Wrapper class for an integer that represents a public key.
+    Wrapper class for a pair of integers that represents a public key.
 
     >>> (_, public_key) = keypair(256)
     >>> isinstance(public_key, public)
     True
+
+    An attempt to create an invalid key raises an exception.
+
+    >>> public('abc')
+    Traceback (most recent call last):
+      ...
+    TypeError: public key must be a tuple of integers
+    >>> public((-123, -456))
+    Traceback (most recent call last):
+      ...
+    ValueError: public key must be a tuple of two positive integers
     """
+    def __init__(self: secret, components: Tuple[int, int]):
+        super().__init__()
+
+        if not all(isinstance(b, int) for b in self):
+            raise TypeError('public key must be a tuple of integers')
+
+        if not len(components) == 2 or components[0] <= 0 or components[1] <= 0:
+            raise ValueError('public key must be a tuple of two positive integers')
 
 class plain(int):
     """
@@ -67,19 +121,17 @@ class cipher(int):
     True
     """
 
-def _generator(modulus: int) -> int:
-    """
-    Return a generator modulo the supplied modulus.
-    """
-    g = 0
-    while g == 0 or math.gcd(g, modulus) != 1:
-        g = secrets.randbelow(modulus)
-
-    return g
-
 def keypair(bit_length: int) -> (secret, public):
     """
-    Return a key pair.
+    Return a pair consisting of a secret and public key such that the primes
+    used to generate the keys have exactly the specified number of bits in
+    their minimum-length binary representation.
+
+    >>> (secret_key, public_key) = keypair(2048)
+    >>> isinstance(secret_key, secret)
+    True
+    >>> isinstance(public_key, public)
+    True
     """
     (p, q) = _primes(bit_length)
     n = p * q
@@ -87,6 +139,7 @@ def keypair(bit_length: int) -> (secret, public):
     g = None
     while g is None:
         g = _generator(n ** 2)
+        # pylint: disable=unbalanced-tuple-unpacking
         (d, mu, _) = egcd((pow(g, lam, n ** 2) - 1) // n, n)
         if d != 1: # pragma: no cover # Highly unlikely to occur.
             g = None
@@ -118,7 +171,7 @@ def encrypt(public_key: public, plaintext: Union[plain, int]) -> cipher:
 
 def decrypt(secret_key: secret, public_key: public, ciphertext: cipher) -> plain:
     """
-    Decrypt the supplied plaintext using the supplied public key.
+    Decrypt the supplied plaintext using the supplied secret and public keys.
 
     >>> (secret_key, public_key) = keypair(2048)
     >>> c = encrypt(public_key, 123)
@@ -149,9 +202,9 @@ def decrypt(secret_key: secret, public_key: public, ciphertext: cipher) -> plain
     (lam, mu) = secret_key
     return plain((((pow(ciphertext, lam, n ** 2) - 1) // n) * mu) % n)
 
-def add(public_key: public, c: cipher, d: cipher) -> cipher:
+def add(public_key: public, *ciphertexts: cipher) -> cipher:
     """
-    Perform addition of two encrypted values to produce the encrypted
+    Perform addition of encrypted values to produce an encrypted
     result.
 
     >>> (secret_key, public_key) = keypair(2048)
@@ -160,6 +213,27 @@ def add(public_key: public, c: cipher, d: cipher) -> cipher:
     >>> r = add(public_key, c, d)
     >>> int(decrypt(secret_key, public_key, r))
     55
+
+    This function supports one or more ciphertexts. If only one ciphertext
+    is supplied, that same ciphertext is returned.
+
+    >>> x = encrypt(public_key, 4)
+    >>> y = encrypt(public_key, 5)
+    >>> z = encrypt(public_key, 6)
+    >>> r = add(public_key, x, y, z)
+    >>> int(decrypt(secret_key, public_key, r))
+    15
+    >>> r = add(public_key, x)
+    >>> int(decrypt(secret_key, public_key, r))
+    4
+
+    Iterables of ciphertexts can be provided with the help of unpacking via
+    ``*`` (thus allowing this function to be used in a manner that resembles
+    the way that the built-in :obj:`sum` function can be used).
+
+    >>> r = add(public_key, *(c for c in [x, y, z]))
+    >>> int(decrypt(secret_key, public_key, r))
+    15
 
     Any attempt to invoke this function using arguments that do not have
     the expected types raises an exception.
@@ -171,17 +245,29 @@ def add(public_key: public, c: cipher, d: cipher) -> cipher:
     >>> add(public_key, c, 123)
     Traceback (most recent call last):
       ...
-    TypeError: can only add two ciphertexts
+    TypeError: can only add ciphertexts
+    >>> add(public_key)
+    Traceback (most recent call last):
+      ...
+    ValueError: at least one ciphertext is required
     """
     if not isinstance(public_key, public):
         raise TypeError('can only perform operation using a public key')
 
-    if (not isinstance(c, cipher)) or (not isinstance(d, cipher)):
-        raise TypeError('can only add two ciphertexts')
+    if len(ciphertexts) < 1:
+        raise ValueError('at least one ciphertext is required')
 
-    return cipher((c * d) % (public_key[0] ** 2))
+    modulus: int = public_key[0] ** 2
+    ciphertexts = iter(ciphertexts)
+    result = next(ciphertexts)
+    for ciphertext in ciphertexts:
+        if not isinstance(ciphertext, cipher):
+            raise TypeError('can only add ciphertexts')
+        result = (result * ciphertext) % modulus
 
-def mul(public_key: public, c: cipher, s: int) -> cipher:
+    return cipher(result)
+
+def mul(public_key: public, ciphertext: cipher, scalar: int) -> cipher:
     """
     Perform multiplication of an encrypted value by a scalar to produce
     the encrypted result.
@@ -211,13 +297,13 @@ def mul(public_key: public, c: cipher, s: int) -> cipher:
     if not isinstance(public_key, public):
         raise TypeError('can only perform operation using a public key')
 
-    if not isinstance(c, cipher):
+    if not isinstance(ciphertext, cipher):
         raise TypeError('can only multiply a ciphertext')
 
-    if not isinstance(s, int):
+    if not isinstance(scalar, int):
         raise TypeError('can only multiply by an integer scalar')
 
-    return cipher((c ** s) % (public_key[0] ** 2))
+    return cipher((ciphertext ** scalar) % (public_key[0] ** 2))
 
 if __name__ == '__main__':
     doctest.testmod() # pragma: no cover
