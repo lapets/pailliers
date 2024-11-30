@@ -51,57 +51,72 @@ class secret(Tuple[int, int, int, int]):
     """
     Wrapper class for a tuple of four integers that represents a secret key.
 
-    >>> (secret_key, _) = keypair(256)
+    >>> secret_key = secret(256)
+    >>> public_key = public(secret_key)
     >>> isinstance(secret_key, secret)
     True
 
-    An attempt to create an invalid key raises an exception.
+    Any attempt to supply an argument that is of the wrong type or outside
+    the supported range raises an exception.
 
     >>> secret('abc')
     Traceback (most recent call last):
       ...
-    TypeError: secret key must be a tuple of integers
-    >>> secret((-12, -34, -56, 0))
+    TypeError: bit length must be an integer
+    >>> secret(0)
     Traceback (most recent call last):
       ...
-    ValueError: secret key must be a tuple of four positive integers
+    ValueError: bit length must be a positive integer
     """
-    def __init__(self: secret, components: Tuple[int, int, int, int]):
-        super().__init__()
+    def __new__(cls, bit_length: int) -> secret:
+        """
+        Create a secret key instance using the supplied argument
+        (instead of the inherited :obj:`tuple` constructor behavior).
+        """
+        if not isinstance(bit_length, int):
+            raise TypeError('bit length must be an integer')
 
-        if not all(isinstance(b, int) for b in self):
-            raise TypeError('secret key must be a tuple of integers')
+        if bit_length < 1:
+            raise ValueError('bit length must be a positive integer')
 
-        if not len(components) == 4 or any(c <= 0 for c in components):
-            raise ValueError('secret key must be a tuple of four positive integers')
+        (p, q) = _primes(bit_length)
+        n = p * q
+        lam = ((p - 1) * (q - 1)) // math.gcd(p - 1, q - 1)
+        g = None
+        while g is None:
+            g = _generator(n ** 2)
+            # pylint: disable=unbalanced-tuple-unpacking
+            (d, mu, _) = egcd((pow(g, lam, n ** 2) - 1) // n, n)
+            if d != 1: # pragma: no cover # Highly unlikely to occur.
+                g = None
+
+        return tuple.__new__(cls, (lam, mu % n, n, g))
 
 class public(Tuple[int, int]):
     """
     Wrapper class for a pair of integers that represents a public key.
 
-    >>> (_, public_key) = keypair(256)
+    >>> public_key = public(secret(256))
     >>> isinstance(public_key, public)
     True
 
-    An attempt to create an invalid key raises an exception.
+    Any attempt to supply an argument that is of the wrong type or outside
+    the supported range raises an exception.
 
     >>> public('abc')
     Traceback (most recent call last):
       ...
-    TypeError: public key must be a tuple of integers
-    >>> public((-123, -456))
-    Traceback (most recent call last):
-      ...
-    ValueError: public key must be a tuple of two positive integers
+    TypeError: secret key required to create public key
     """
-    def __init__(self: secret, components: Tuple[int, int]):
-        super().__init__()
+    def __new__(cls, secret_key: secret) -> public:
+        """
+        Create a public key instance using the supplied argument
+        (instead of the inherited :obj:`tuple` constructor behavior).
+        """
+        if not isinstance(secret_key, secret):
+            raise TypeError('secret key required to create public key')
 
-        if not all(isinstance(b, int) for b in self):
-            raise TypeError('public key must be a tuple of integers')
-
-        if not len(components) == 2 or components[0] <= 0 or components[1] <= 0:
-            raise ValueError('public key must be a tuple of two positive integers')
+        return tuple.__new__(cls, secret_key[2:])
 
 class plain(int):
     """
@@ -115,42 +130,19 @@ class cipher(int):
     """
     Wrapper class for an integer that represents a ciphertext.
 
-    >>> (secret_key, public_key) = keypair(256)
+    >>> secret_key = secret(256)
+    >>> public_key = public(secret_key)
     >>> ciphertext = encrypt(public_key, plain(123))
     >>> isinstance(ciphertext, cipher)
     True
     """
 
-def keypair(bit_length: int) -> (secret, public):
-    """
-    Return a pair consisting of a secret and public key such that the primes
-    used to generate the keys have exactly the specified number of bits in
-    their minimum-length binary representation.
-
-    >>> (secret_key, public_key) = keypair(2048)
-    >>> isinstance(secret_key, secret)
-    True
-    >>> isinstance(public_key, public)
-    True
-    """
-    (p, q) = _primes(bit_length)
-    n = p * q
-    lam = ((p - 1) * (q - 1)) // math.gcd(p - 1, q - 1)
-    g = None
-    while g is None:
-        g = _generator(n ** 2)
-        # pylint: disable=unbalanced-tuple-unpacking
-        (d, mu, _) = egcd((pow(g, lam, n ** 2) - 1) // n, n)
-        if d != 1: # pragma: no cover # Highly unlikely to occur.
-            g = None
-
-    return (secret((lam, mu % n, n, g)), public((n, g)))
-
 def encrypt(public_key: public, plaintext: Union[plain, int]) -> cipher:
     """
     Encrypt the supplied plaintext using the supplied public key.
 
-    >>> (secret_key, public_key) = keypair(2048)
+    >>> secret_key = secret(2048)
+    >>> public_key = public(secret_key)
     >>> c = encrypt(public_key, 123)
     >>> isinstance(c, cipher)
     True
@@ -172,9 +164,10 @@ def encrypt(public_key: public, plaintext: Union[plain, int]) -> cipher:
 
 def decrypt(secret_key: secret, ciphertext: cipher) -> plain:
     """
-    Decrypt the supplied plaintext using the supplied secret and public keys.
+    Decrypt the supplied plaintext using the supplied secret key.
 
-    >>> (secret_key, public_key) = keypair(2048)
+    >>> secret_key = secret(2048)
+    >>> public_key = public(secret_key)
     >>> c = encrypt(public_key, 123)
     >>> decrypt(secret_key, c)
     123
@@ -202,10 +195,11 @@ def decrypt(secret_key: secret, ciphertext: cipher) -> plain:
 
 def add(public_key: public, *ciphertexts: cipher) -> cipher:
     """
-    Perform addition of encrypted values to produce an encrypted
+    Perform addition of encrypted values to produce the encrypted
     result.
 
-    >>> (secret_key, public_key) = keypair(2048)
+    >>> secret_key = secret(2048)
+    >>> public_key = public(secret_key)
     >>> c = encrypt(public_key, 22)
     >>> d = encrypt(public_key, 33)
     >>> r = add(public_key, c, d)
@@ -270,7 +264,8 @@ def mul(public_key: public, ciphertext: cipher, scalar: int) -> cipher:
     Perform multiplication of an encrypted value by a scalar to produce
     the encrypted result.
 
-    >>> (secret_key, public_key) = keypair(2048)
+    >>> secret_key = secret(2048)
+    >>> public_key = public(secret_key)
     >>> c = encrypt(public_key, 22)
     >>> r = mul(public_key, c, 3)
     >>> int(decrypt(secret_key, r))
