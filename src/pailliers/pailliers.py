@@ -1,6 +1,6 @@
 """
 Minimal pure-Python implementation of
-`Paillier's additively homomorphic cryptosystem<https://en.wikipedia.org/wiki/Paillier_cryptosystem>`__.
+`Paillier's additively homomorphic cryptosystem <https://en.wikipedia.org/wiki/Paillier_cryptosystem>`__.
 """
 from __future__ import annotations
 from typing import Union, Tuple

@@ -2,7 +2,7 @@
 pailliers
 =========
 
-Minimal pure-Python implementation of `Paillier's additively homomorphic cryptosystem<https://en.wikipedia.org/wiki/Paillier_cryptosystem>`__.
+Minimal pure-Python implementation of `Paillier's additively homomorphic cryptosystem <https://en.wikipedia.org/wiki/Paillier_cryptosystem>`__.
 
 |pypi| |readthedocs| |actions| |coveralls|
 
