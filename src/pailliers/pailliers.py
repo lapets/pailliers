@@ -52,7 +52,7 @@ class secret(Tuple[int, int, int, int]):
     """
     Wrapper class for a tuple of four integers that represents a secret key.
 
-    >>> secret_key = secret(256)
+    >>> secret_key = secret(2048)
     >>> public_key = public(secret_key)
     >>> isinstance(secret_key, secret)
     True
@@ -97,7 +97,7 @@ class public(Tuple[int, int]):
     """
     Wrapper class for a pair of integers that represents a public key.
 
-    >>> public_key = public(secret(256))
+    >>> public_key = public(secret(2048))
     >>> isinstance(public_key, public)
     True
 
@@ -131,12 +131,93 @@ class cipher(int):
     """
     Wrapper class for an integer that represents a ciphertext.
 
-    >>> secret_key = secret(256)
+    >>> secret_key = secret(2048)
     >>> public_key = public(secret_key)
     >>> ciphertext = encrypt(public_key, plain(123))
     >>> isinstance(ciphertext, cipher)
     True
     """
+    def __init__(self: cipher, integer: int): # pylint: disable=unused-argument
+        super(type(self))
+        self._public_key = None
+
+    def __add__(self: cipher, other: cipher) -> cipher:
+        """
+        Perform addition of encrypted values to produce the encrypted
+        result.
+
+        >>> secret_key = secret(2048)
+        >>> public_key = public(secret_key)
+        >>> c = encrypt(public_key, 22)
+        >>> d = encrypt(public_key, 33)
+        >>> r = c + d
+        >>> int(decrypt(secret_key, r))
+        55
+        """
+        ciphertext = add(self._public_key, self, other)
+        setattr(ciphertext, '_public_key', self._public_key)
+        return ciphertext
+
+    def __iadd__(self: cipher, other: cipher) -> cipher:
+        """
+        Add an encrypted value to an existing encrypted value.
+
+        >>> secret_key = secret(2048)
+        >>> public_key = public(secret_key)
+        >>> c = encrypt(public_key, 22)
+        >>> d = encrypt(public_key, 33)
+        >>> c += d
+        >>> int(decrypt(secret_key, c))
+        55
+        """
+        ciphertext = add(self._public_key, self, other)
+        setattr(ciphertext, '_public_key', self._public_key)
+        return ciphertext
+
+    def __mul__(self: cipher, scalar: int) -> cipher:
+        """
+        Perform multiplication of an encrypted value by a scalar to produce
+        the encrypted result.
+
+        >>> secret_key = secret(2048)
+        >>> public_key = public(secret_key)
+        >>> c = encrypt(public_key, 22)
+        >>> r = c * 3
+        >>> int(decrypt(secret_key, r))
+        66
+        """
+        ciphertext = mul(self._public_key, self, scalar)
+        setattr(ciphertext, '_public_key', self._public_key)
+        return ciphertext
+
+    def __rmul__(self: cipher, scalar: int) -> cipher:
+        """
+        Perform multiplication of an encrypted value by a scalar (that appears
+        on the left side of the operator) to produce the encrypted result.
+
+        >>> secret_key = secret(2048)
+        >>> public_key = public(secret_key)
+        >>> c = encrypt(public_key, 22)
+        >>> r = 3 * c
+        >>> int(decrypt(secret_key, r))
+        66
+        """
+        return self.__mul__(scalar)
+
+    def __imul__(self: cipher, scalar: int) -> cipher:
+        """
+        Perform multiplication of an encrypted value by a scalar.
+
+        >>> secret_key = secret(2048)
+        >>> public_key = public(secret_key)
+        >>> c = encrypt(public_key, 22)
+        >>> c *= 3
+        >>> int(decrypt(secret_key, c))
+        66
+        """
+        ciphertext = mul(self._public_key, self, scalar)
+        setattr(ciphertext, '_public_key', self._public_key)
+        return ciphertext
 
 def encrypt(public_key: public, plaintext: Union[plain, int]) -> cipher:
     """
@@ -161,7 +242,9 @@ def encrypt(public_key: public, plaintext: Union[plain, int]) -> cipher:
 
     (n, g) = public_key
     r = _generator(n)
-    return cipher(pow(g, plaintext % n, n ** 2) * pow(r, n, n ** 2))
+    ciphertext = cipher(pow(g, plaintext % n, n ** 2) * pow(r, n, n ** 2))
+    setattr(ciphertext, '_public_key', public_key)
+    return ciphertext
 
 def decrypt(secret_key: secret, ciphertext: cipher) -> plain:
     """
@@ -252,11 +335,11 @@ def add(public_key: public, *ciphertexts: cipher) -> cipher:
 
     modulus: int = public_key[0] ** 2
     ciphertexts = iter(ciphertexts)
-    result = next(ciphertexts)
+    result = int(next(ciphertexts))
     for ciphertext in ciphertexts:
         if not isinstance(ciphertext, cipher):
             raise TypeError('can only add ciphertexts')
-        result = (result * ciphertext) % modulus
+        result = (result * int(ciphertext)) % modulus
 
     return cipher(result)
 
@@ -297,7 +380,7 @@ def mul(public_key: public, ciphertext: cipher, scalar: int) -> cipher:
     if not isinstance(scalar, int):
         raise TypeError('can only multiply by an integer scalar')
 
-    return cipher((ciphertext ** scalar) % (public_key[0] ** 2))
+    return cipher((int(ciphertext) ** scalar) % (public_key[0] ** 2))
 
 if __name__ == '__main__':
     doctest.testmod() # pragma: no cover

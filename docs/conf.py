@@ -62,6 +62,20 @@ add_module_names = False
 
 # Options to configure autodoc extension behavior.
 autodoc_member_order = 'bysource'
+autodoc_default_options = {
+    'special-members': True,
+    'exclude-members': ','.join([
+        '__parameters__',
+        '__orig_bases__',
+        '__annotations__',
+        '__new__',
+        '__init__',
+        '__weakref__',
+        '__module__',
+        '__hash__',
+        '__dict__'
+    ])
+}
 autodoc_preserve_defaults = True
 
 # Allow references/links to definitions found in the Python documentation
