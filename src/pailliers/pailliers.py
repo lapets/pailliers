@@ -4,7 +4,7 @@ Minimal pure-Python implementation of
 <https://en.wikipedia.org/wiki/Paillier_cryptosystem>`__.
 """
 from __future__ import annotations
-from typing import Union, Tuple
+from typing import Union, Optional, Tuple
 import doctest
 import math
 import secrets
@@ -133,13 +133,43 @@ class cipher(int):
 
     >>> secret_key = secret(2048)
     >>> public_key = public(secret_key)
-    >>> ciphertext = encrypt(public_key, plain(123))
-    >>> isinstance(ciphertext, cipher)
+    >>> c = encrypt(public_key, plain(123))
+    >>> isinstance(c, cipher)
     True
+
+    This class defines a number of special methods corresponding to arithmetic
+    operations so that Python's built-in operators can be used when working
+    with instances of this class. These operators will only work on instances
+    of this class that have been constructed with a public key (which is the
+    default behavior of the :obj:`encrypt` function).
+    
+    >>> decrypt(secret_key, c + c)
+    246
+    >>> decrypt(secret_key, 2 * c)
+    246
+
+    For instances that were not constructed with a public key, the :obj:`add`
+    and :obj:`mul` functions should be used.
+
+    >>> c = cipher(int(c), public_key=public_key)
+    >>> decrypt(secret_key, c + c)
+    246
+    >>> n = int(c)
+    >>> c = cipher(n)
+    >>> decrypt(secret_key, add(public_key, c, c))
+    246
+    >>> decrypt(secret_key, mul(public_key, c, 2))
+    246
     """
-    def __init__(self: cipher, integer: int): # pylint: disable=unused-argument
-        super(type(self))
-        self._public_key = None
+    def __new__(
+            cls: type,
+            integer: int, # pylint: disable=unused-argument
+            public_key: Optional[public] = None
+        ):
+        instance = int.__new__(cls, integer)
+        if public_key is not None:
+            instance._public_key = public_key
+        return instance
 
     def __add__(self: cipher, other: cipher) -> cipher:
         """
@@ -153,10 +183,51 @@ class cipher(int):
         >>> r = c + d
         >>> int(decrypt(secret_key, r))
         55
+
+        At least one of the two arguments must have a public key.
+
+        >>> decrypt(secret_key, cipher(int(c)) + c)
+        44
+        >>> decrypt(secret_key, c + cipher(int(c)))
+        44
+        >>> cipher(int(c)) + cipher(int(c))
+        Traceback (most recent call last):
+          ...
+        ValueError: public key is required for addition
         """
-        ciphertext = add(self._public_key, self, other)
-        setattr(ciphertext, '_public_key', self._public_key)
+        public_key = None
+        if hasattr(self, '_public_key'):
+            public_key = self._public_key
+        elif hasattr(other, '_public_key'):
+            public_key = other._public_key
+        else:
+            raise ValueError('public key is required for addition')
+
+        ciphertext = add(public_key, self, other)
+        ciphertext._public_key = public_key
         return ciphertext
+
+    def __radd__(self: cipher, other: Union[int, cipher]) -> cipher:
+        """
+        This method makes it possible to use the built-in :obj:`sum` function.
+
+        >>> secret_key = secret(2048)
+        >>> public_key = public(secret_key)
+        >>> c = encrypt(public_key, 22)
+        >>> decrypt(secret_key, sum([c, c, c, c]))
+        88
+
+        This method should not be invoked for any other reason.
+
+        >>> 123 + c
+        Traceback (most recent call last):
+          ...
+        TypeError: can only add ciphertexts
+        """
+        if isinstance(other, int) and other == 0:
+            return self
+
+        return self.__add__(other) # Default behavior.
 
     def __iadd__(self: cipher, other: cipher) -> cipher:
         """
@@ -169,10 +240,31 @@ class cipher(int):
         >>> c += d
         >>> int(decrypt(secret_key, c))
         55
+        
+        At least one of the two arguments must have a public key.
+
+        >>> c += cipher(int(c))
+        >>> decrypt(secret_key, c)
+        110
+        >>> d = cipher(int(d))
+        >>> d += c
+        >>> decrypt(secret_key, d)
+        143
+        >>> d = cipher(int(d))
+        >>> d += cipher(int(c))
+        Traceback (most recent call last):
+          ...
+        ValueError: public key is required for addition
+
+        An integer base value can be used when accumulating iteratively.
+
+        >>> b = 0
+        >>> b += encrypt(public_key, 22)
+        >>> b += encrypt(public_key, 33)
+        >>> decrypt(secret_key, b)
+        55
         """
-        ciphertext = add(self._public_key, self, other)
-        setattr(ciphertext, '_public_key', self._public_key)
-        return ciphertext
+        return self.__add__(other)
 
     def __mul__(self: cipher, scalar: int) -> cipher:
         """
@@ -185,7 +277,20 @@ class cipher(int):
         >>> r = c * 3
         >>> int(decrypt(secret_key, r))
         66
+
+        This instance must have a public key.
+
+        >>> c = cipher(int(c))
+        >>> c * 3
+        Traceback (most recent call last):
+          ...
+        ValueError: public key is required for scalar multiplication
         """
+        if not hasattr(self, '_public_key'):
+            raise ValueError(
+                'public key is required for scalar multiplication'
+            )
+
         ciphertext = mul(self._public_key, self, scalar)
         setattr(ciphertext, '_public_key', self._public_key)
         return ciphertext
@@ -201,6 +306,14 @@ class cipher(int):
         >>> r = 3 * c
         >>> int(decrypt(secret_key, r))
         66
+
+        This instance must have a public key.
+
+        >>> c = cipher(int(c))
+        >>> c * 3
+        Traceback (most recent call last):
+          ...
+        ValueError: public key is required for scalar multiplication
         """
         return self.__mul__(scalar)
 
@@ -214,10 +327,16 @@ class cipher(int):
         >>> c *= 3
         >>> int(decrypt(secret_key, c))
         66
+
+        This instance must have a public key.
+
+        >>> c = cipher(int(c))
+        >>> c * 3
+        Traceback (most recent call last):
+          ...
+        ValueError: public key is required for scalar multiplication
         """
-        ciphertext = mul(self._public_key, self, scalar)
-        setattr(ciphertext, '_public_key', self._public_key)
-        return ciphertext
+        return self.__mul__(scalar)
 
 def encrypt(public_key: public, plaintext: Union[plain, int]) -> cipher:
     """
