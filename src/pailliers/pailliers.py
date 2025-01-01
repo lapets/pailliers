@@ -361,7 +361,15 @@ def encrypt(public_key: public, plaintext: Union[plain, int]) -> cipher:
 
     (n, g) = public_key
     r = _generator(n)
-    ciphertext = cipher(pow(g, plaintext % n, n ** 2) * pow(r, n, n ** 2))
+    ciphertext = cipher(
+        (
+            pow(g, plaintext % n, n ** 2)
+            *
+            pow(r, n, n ** 2)
+        )
+        %
+        (n ** 2)
+    )
     setattr(ciphertext, '_public_key', public_key)
     return ciphertext
 
