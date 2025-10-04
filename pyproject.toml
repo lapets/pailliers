@@ -1,6 +1,6 @@
 [project]
 name = "pailliers"
-version = "0.2.0"
+version = "0.3.0"
 description = """\
     Minimal pure-Python implementation of Paillier's additively \
     homomorphic cryptosystem.
@@ -14,7 +14,7 @@ readme = "README.rst"
 requires-python = ">=3.7"
 dependencies = [
     "egcd~=2.0",
-    "rabinmiller~=0.1"
+    "rabinmiller~=0.2"
 ]
 
 [project.urls]
@@ -24,8 +24,10 @@ Documentation = "https://pailliers.readthedocs.io"
 [project.optional-dependencies]
 docs = [
     "toml~=0.10.2",
-    "sphinx~=5.0",
-    "sphinx-rtd-theme~=2.0.0"
+    "sphinx~=5.0; python_version <= '3.12'",
+    "sphinx~=7.4; python_version > '3.12'",
+    "sphinx-rtd-theme~=2.0.0; python_version <= '3.12'",
+    "sphinx-rtd-theme~=3.0; python_version > '3.12'"
 ]
 test = [
     "pytest~=7.4; python_version < '3.12'",
