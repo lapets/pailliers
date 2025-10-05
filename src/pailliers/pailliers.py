@@ -57,8 +57,8 @@ class secret(Tuple[int, int, int, int]):
     >>> isinstance(secret_key, secret)
     True
 
-    Any attempt to supply an argument that is of the wrong type or outside
-    the supported range raises an exception.
+    Any attempt to supply an argument that is of the wrong type or outside the
+    supported range raises an exception.
 
     >>> secret('abc')
     Traceback (most recent call last):
@@ -101,8 +101,8 @@ class public(Tuple[int, int]):
     >>> isinstance(public_key, public)
     True
 
-    Any attempt to supply an argument that is of the wrong type or outside
-    the supported range raises an exception.
+    Any attempt to supply an argument that is of the wrong type or outside the
+    supported range raises an exception.
 
     >>> public('abc')
     Traceback (most recent call last):
@@ -157,7 +157,11 @@ class cipher(int):
     >>> decrypt(secret_key, c + c)
     246
     >>> n = int(c)
-    >>> c = cipher(n)
+    >>> c = cipher(n) # This instance has no internal copy of a public key.
+    >>> c + c
+    Traceback (most recent call last):
+      ...
+    ValueError: public key is required for addition
     >>> decrypt(secret_key, add(public_key, c, c))
     246
     >>> decrypt(secret_key, mul(public_key, c, 2))
@@ -175,6 +179,18 @@ class cipher(int):
     True
     >>> int(decrypt(secret_key, c * (2**9))) == (2**7) * (2**9)
     False
+
+    Any attempt to invoke the constructor using arguments that do not have the
+    expected types raises an exception.
+
+    >>> cipher('abc', public_key='abc')
+    Traceback (most recent call last):
+      ...
+    ValueError: invalid literal for int() with base 10: 'abc'
+    >>> cipher(123, public_key='abc')
+    Traceback (most recent call last):
+      ...
+    TypeError: public key must be an instance of the public class
     """
     def __new__(
             cls: type,
@@ -182,8 +198,15 @@ class cipher(int):
             public_key: Optional[public] = None
         ):
         instance = int.__new__(cls, integer)
+
         if public_key is not None:
+            if not isinstance(public_key, public):
+                raise TypeError(
+                    'public key must be an instance of the public class'
+                )
+
             instance._public_key = public_key
+
         return instance
 
     def __add__(self: cipher, other: cipher) -> cipher:
@@ -209,13 +232,30 @@ class cipher(int):
         Traceback (most recent call last):
           ...
         ValueError: public key is required for addition
+
+        If public keys are specified in both ciphertexts, they must match.
+
+        >>> secret_key_a = secret(2048)
+        >>> public_key_a = public(secret_key_a)
+        >>> secret_key_b = secret(2048)
+        >>> public_key_b = public(secret_key_b)
+        >>> encrypt(public_key_a, 123) + encrypt(public_key_b, 456)
+        Traceback (most recent call last):
+          ...
+        ValueError: public keys of ciphertexts must match
         """
         public_key = None
+
         if hasattr(self, '_public_key'):
             public_key = self._public_key
-        elif hasattr(other, '_public_key'):
-            public_key = other._public_key
-        else:
+
+        if hasattr(other, '_public_key'):
+            if public_key is None:
+                public_key = other._public_key
+            elif tuple(public_key) != tuple(other._public_key):
+                raise ValueError('public keys of ciphertexts must match')
+
+        if public_key is None:
             raise ValueError('public key is required for addition')
 
         ciphertext = add(public_key, self, other)
@@ -364,8 +404,8 @@ def encrypt(public_key: public, plaintext: Union[plain, int]) -> cipher:
     >>> isinstance(c, cipher)
     True
 
-    Any attempt to invoke this function using arguments that do not have
-    the expected types raises an exception.
+    Any attempt to invoke this function using arguments that do not have the
+    expected types raises an exception.
 
     >>> encrypt(secret_key, 123)
     Traceback (most recent call last):
@@ -399,8 +439,8 @@ def decrypt(secret_key: secret, ciphertext: cipher) -> plain:
     >>> decrypt(secret_key, c)
     123
 
-    Any attempt to invoke this function using arguments that do not have
-    the expected types raises an exception.
+    Any attempt to invoke this function using arguments that do not have the
+    expected types raises an exception.
 
     >>> decrypt(public_key, c)
     Traceback (most recent call last):
@@ -454,8 +494,8 @@ def add(public_key: public, *ciphertexts: cipher) -> cipher:
     >>> int(decrypt(secret_key, r))
     15
 
-    Any attempt to invoke this function using arguments that do not have
-    the expected types raises an exception.
+    Any attempt to invoke this function using arguments that do not have the
+    expected types raises an exception.
 
     >>> add(secret_key, c, d)
     Traceback (most recent call last):
@@ -498,8 +538,8 @@ def mul(public_key: public, ciphertext: cipher, scalar: int) -> cipher:
     >>> int(decrypt(secret_key, r))
     66
 
-    Any attempt to invoke this function using arguments that do not have
-    the expected types raises an exception.
+    Any attempt to invoke this function using arguments that do not have the
+    expected types raises an exception.
 
     >>> mul(secret_key, c, 3)
     Traceback (most recent call last):
