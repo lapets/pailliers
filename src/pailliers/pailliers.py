@@ -174,10 +174,10 @@ class cipher(int):
 
     >>> secret_key = secret(8)
     >>> public_key = public(secret_key)
-    >>> c = encrypt(public_key, 2**7)
-    >>> int(decrypt(secret_key, c)) == 2**7
+    >>> c = encrypt(public_key, 2 ** 7)
+    >>> int(decrypt(secret_key, c)) == 2 ** 7
     True
-    >>> int(decrypt(secret_key, c * (2**9))) == (2**7) * (2**9)
+    >>> int(decrypt(secret_key, c * (2 ** 9))) == (2 ** 7) * (2 ** 9)
     False
 
     Any attempt to invoke the constructor using arguments that do not have the
@@ -563,7 +563,7 @@ def mul(public_key: public, ciphertext: cipher, scalar: int) -> cipher:
     if not isinstance(scalar, int):
         raise TypeError('can only multiply by an integer scalar')
 
-    return cipher((int(ciphertext) ** scalar) % (public_key[0] ** 2))
+    return cipher(pow(int(ciphertext), scalar, public_key[0] ** 2))
 
 if __name__ == '__main__':
     doctest.testmod() # pragma: no cover
