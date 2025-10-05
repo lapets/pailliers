@@ -142,14 +142,16 @@ class cipher(int):
     with instances of this class. These operators will only work on instances
     of this class that have been constructed with a public key (which is the
     default behavior of the :obj:`encrypt` function).
-    
+
     >>> decrypt(secret_key, c + c)
     246
     >>> decrypt(secret_key, 2 * c)
     246
 
-    For instances that were not constructed with a public key, the :obj:`add`
-    and :obj:`mul` functions should be used.
+    To facilitate the use of instances that do not maintain internal copies of
+    the same public key (*e.g.*, in cases where memory constraints are an issue
+    or ciphertexts are stored/communicated separately from key information),
+    the :obj:`add` and :obj:`mul` functions can be used.
 
     >>> c = cipher(int(c), public_key=public_key)
     >>> decrypt(secret_key, c + c)
@@ -160,6 +162,19 @@ class cipher(int):
     246
     >>> decrypt(secret_key, mul(public_key, c, 2))
     246
+
+    **Warning:** When the true integer sum of two encrypted values --- or the
+    true product of an encrypted value and an integer scalar --- exceeds the
+    modulus within the public key, the decrypted result will not match the true
+    result.
+
+    >>> secret_key = secret(8)
+    >>> public_key = public(secret_key)
+    >>> c = encrypt(public_key, 2**7)
+    >>> int(decrypt(secret_key, c)) == 2**7
+    True
+    >>> int(decrypt(secret_key, c * (2**9))) == (2**7) * (2**9)
+    False
     """
     def __new__(
             cls: type,
@@ -259,10 +274,11 @@ class cipher(int):
         An integer base value can be used when accumulating iteratively.
 
         >>> b = 0
-        >>> b += encrypt(public_key, 22)
-        >>> b += encrypt(public_key, 33)
+        >>> b += encrypt(public_key, 1)
+        >>> b += encrypt(public_key, 2)
+        >>> b += encrypt(public_key, 3)
         >>> decrypt(secret_key, b)
-        55
+        6
         """
         return self.__add__(other)
 
