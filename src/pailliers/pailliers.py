@@ -13,22 +13,42 @@ from rabinmiller import rabinmiller
 
 def _primes(bit_length: int) -> Tuple[int, int]:
     """
-    Return a pair of distinct primes (each having the specified
-    number of bits in its representation).
+    Return a pair of distinct primes such that each prime has the specified
+    number of bits in its binary representation and also such that the binary
+    representation of their product has exactly twice the specified number of
+    bits.
 
     >>> (p, q) = _primes(32)
     >>> p.bit_length() == q.bit_length() == 32
     True
     >>> math.gcd(p, q)
     1
+    >>> (p * q).bit_length()
+    64
     """
+    # Set the lower and upper bounds for the target range.
     (lower, upper) = (2 ** (bit_length - 1), (2 ** bit_length) - 1)
     difference = upper - lower
-    (p, q) = (0, 0)
+
+    # Generate the first prime.
+    p = 0
     while p <= lower or not rabinmiller(p):
         p = (secrets.randbelow(difference // 2) * 2) + lower + 1
+
+        # Ensure that the product has exactly twice the number of bits by only
+        # choosing candidate primes in which the two most significant bits are
+        # set.
+        p |= (1 << (bit_length - 1)) | (1 << (bit_length - 2))
+
+    # Generate a second distinct prime.
+    q = 0
     while p == q or q <= lower or not rabinmiller(q):
         q = (secrets.randbelow(difference // 2) * 2) + lower + 1
+
+        # Ensure that the product has exactly twice the number of bits by only
+        # choosing candidate primes in which the two most significant bits are
+        # set.
+        q |= (1 << (bit_length - 1)) | (1 << (bit_length - 2))
 
     return (p, q)
 
@@ -51,6 +71,10 @@ def _generator(modulus: int) -> int:
 class secret(Tuple[int, int, int, int]):
     """
     Wrapper class for a tuple of four integers that represents a secret key.
+    The ``bit_length`` argument specifies the bit length of each of the two
+    prime integers found in the key. Furthermore, the product of these two
+    primes (*i.e.*, the modulus) is guaranteed to have a bit length that is
+    exactly twice the value of ``bit_length``.
 
     >>> secret_key = secret(2048)
     >>> public_key = public(secret_key)

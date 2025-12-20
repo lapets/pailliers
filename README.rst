@@ -40,16 +40,16 @@ Examples
 ^^^^^^^^
 
 .. |secret| replace:: ``secret``
-.. _secret: https://pailliers.readthedocs.io/en/0.3.0/_source/pailliers.html#pailliers.pailliers.secret
+.. _secret: https://pailliers.readthedocs.io/en/0.3.1/_source/pailliers.html#pailliers.pailliers.secret
 
 .. |public| replace:: ``public``
-.. _public: https://pailliers.readthedocs.io/en/0.3.0/_source/pailliers.html#pailliers.pailliers.public
+.. _public: https://pailliers.readthedocs.io/en/0.3.1/_source/pailliers.html#pailliers.pailliers.public
 
 .. |encrypt| replace:: ``encrypt``
-.. _encrypt: https://pailliers.readthedocs.io/en/0.3.0/_source/pailliers.html#pailliers.pailliers.encrypt
+.. _encrypt: https://pailliers.readthedocs.io/en/0.3.1/_source/pailliers.html#pailliers.pailliers.encrypt
 
 .. |decrypt| replace:: ``decrypt``
-.. _decrypt: https://pailliers.readthedocs.io/en/0.3.0/_source/pailliers.html#pailliers.pailliers.decrypt
+.. _decrypt: https://pailliers.readthedocs.io/en/0.3.1/_source/pailliers.html#pailliers.pailliers.decrypt
 
 
 This library supports the creation of |secret|_ keys, derivation of |public|_ keys from |secret|_ keys, encryption of integers into ciphertexts using public keys via |encrypt|_, and decryption of ciphertexts into integers using |secret|_ keys via |decrypt|_:
@@ -63,16 +63,16 @@ This library supports the creation of |secret|_ keys, derivation of |public|_ ke
     123
 
 .. |cipher| replace:: ``cipher``
-.. _cipher: https://pailliers.readthedocs.io/en/0.3.0/_source/pailliers.html#pailliers.pailliers.cipher
+.. _cipher: https://pailliers.readthedocs.io/en/0.3.1/_source/pailliers.html#pailliers.pailliers.cipher
 
 .. |int| replace:: ``int``
 .. _int: https://docs.python.org/3/library/functions.html#int
 
 .. |special_add| replace:: ``__add__``
-.. _special_add: https://pailliers.readthedocs.io/en/0.3.0/_source/pailliers.html#pailliers.pailliers.cipher.__add__
+.. _special_add: https://pailliers.readthedocs.io/en/0.3.1/_source/pailliers.html#pailliers.pailliers.cipher.__add__
 
 .. |special_mul| replace:: ``__mul__``
-.. _special_mul: https://pailliers.readthedocs.io/en/0.3.0/_source/pailliers.html#pailliers.pailliers.cipher.__mul__
+.. _special_mul: https://pailliers.readthedocs.io/en/0.3.1/_source/pailliers.html#pailliers.pailliers.cipher.__mul__
 
 The |encrypt|_ function returns instances of the |cipher|_ class (which is `derived <https://docs.python.org/3/tutorial/classes.html#inheritance>`__ from the built-in |int|_ type) that represent ciphertexts. Because the |cipher|_ class includes definitions of special methods (such as |special_add|_ and |special_mul|_) corresponding to Python's built-in addition and multiplication operators, these operators can be used to add two ciphertexts and to multiply a ciphertext by an integer scalar:
 
@@ -85,13 +85,13 @@ The |encrypt|_ function returns instances of the |cipher|_ class (which is `deri
     702
 
 .. |special_iadd| replace:: ``__iadd__``
-.. _special_iadd: https://pailliers.readthedocs.io/en/0.3.0/_source/pailliers.html#pailliers.pailliers.cipher.__iadd__
+.. _special_iadd: https://pailliers.readthedocs.io/en/0.3.1/_source/pailliers.html#pailliers.pailliers.cipher.__iadd__
 
 .. |special_imul| replace:: ``__imul__``
-.. _special_imul: https://pailliers.readthedocs.io/en/0.3.0/_source/pailliers.html#pailliers.pailliers.cipher.__imul__
+.. _special_imul: https://pailliers.readthedocs.io/en/0.3.1/_source/pailliers.html#pailliers.pailliers.cipher.__imul__
 
 .. |special_radd| replace:: ``__radd__``
-.. _special_radd: https://pailliers.readthedocs.io/en/0.3.0/_source/pailliers.html#pailliers.pailliers.cipher.__radd__
+.. _special_radd: https://pailliers.readthedocs.io/en/0.3.1/_source/pailliers.html#pailliers.pailliers.cipher.__radd__
 
 .. |sum| replace:: ``sum``
 .. _sum: https://docs.python.org/3/library/functions.html#sum
@@ -110,10 +110,10 @@ Other special methods make it possible to use a single variable to accumulate it
     36
 
 .. |add| replace:: ``add``
-.. _add: https://pailliers.readthedocs.io/en/0.3.0/_source/pailliers.html#pailliers.pailliers.add
+.. _add: https://pailliers.readthedocs.io/en/0.3.1/_source/pailliers.html#pailliers.pailliers.add
 
 .. |mul| replace:: ``mul``
-.. _mul: https://pailliers.readthedocs.io/en/0.3.0/_source/pailliers.html#pailliers.pailliers.mul
+.. _mul: https://pailliers.readthedocs.io/en/0.3.1/_source/pailliers.html#pailliers.pailliers.mul
 
 Addition will only work on two or more instances of the |cipher|_ class. To facilitate the use of |cipher|_ instances that do not all maintain internal copies of the same public key (*e.g.*, in cases where memory constraints are an issue or ciphertexts are stored/communicated separately from key information), the |add|_ and |mul|_ functions are also provided. The public key must be supplied explicitly to these functions:
 
